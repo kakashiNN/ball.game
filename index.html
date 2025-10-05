@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game (Mobile Keypad)</title>
+<title>Snake Game (Leaderboard + Visitors)</title>
 <style>
   body {
     background: #000;
@@ -13,11 +13,13 @@
     justify-content: center;
     margin: 0;
     height: 100vh;
+    color: #fff;
+    font-family: sans-serif;
   }
   canvas {
     background: #111;
     display: block;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     touch-action: none;
     width: 90vw;
     height: 90vw;
@@ -29,6 +31,7 @@
     grid-template-columns: repeat(3, 70px);
     grid-template-rows: repeat(3, 70px);
     gap: 10px;
+    margin-bottom: 10px;
   }
   .controls button {
     font-size: 28px;
@@ -42,9 +45,20 @@
     background: #555;
   }
   .empty { background: transparent; border: none; }
+  .info {
+    margin-bottom: 10px;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
+
+<h2>Snake Game</h2>
+<div class="info">
+  <div>Visitors: <span id="visitorCount">0</span></div>
+  <div>Top Score: <span id="topScore">0</span></div>
+  <div>Your Score: <span id="score">0</span></div>
+</div>
 
 <canvas id="game" width="500" height="500"></canvas>
 
@@ -77,10 +91,22 @@ let dy = 0;
 let score = 0;
 
 // Speed control
-let baseSpeed = 5; // initial speed
-let maxSpeed = 20; 
+let baseSpeed = 5;
+let maxSpeed = 20;
 let speed = baseSpeed;
 let lastTime = 0;
+
+// Visitors & Top Score using localStorage
+if(!localStorage.getItem('visitorCount')) localStorage.setItem('visitorCount', 0);
+let visitorCount = parseInt(localStorage.getItem('visitorCount')) + 1;
+localStorage.setItem('visitorCount', visitorCount);
+document.getElementById('visitorCount').innerText = visitorCount;
+
+if(!localStorage.getItem('topScore')) localStorage.setItem('topScore', 0);
+let topScore = parseInt(localStorage.getItem('topScore'));
+document.getElementById('topScore').innerText = topScore;
+
+document.getElementById('score').innerText = score;
 
 // Keyboard input
 window.addEventListener('keydown', e => {
@@ -91,7 +117,7 @@ window.addEventListener('keydown', e => {
   else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
 });
 
-// Mobile keypad buttons
+// Mobile buttons
 function setDirection(x, y){
   if(dx === 0 && x !== 0){ dx = x; dy = 0; }
   else if(dy === 0 && y !== 0){ dx = 0; dy = y; }
@@ -108,7 +134,7 @@ function setDirection(x, y){
   }, {passive:false});
 });
 
-// Main game loop
+// Game Loop
 function gameLoop(timestamp){
   if(!lastTime) lastTime = timestamp;
   const interval = 1000 / speed;
@@ -123,7 +149,7 @@ function gameLoop(timestamp){
 // Update snake
 function update(){
   speed = baseSpeed + Math.min(snake.length-1, maxSpeed-baseSpeed);
-  
+
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
   // Invisible walls
@@ -135,8 +161,14 @@ function update(){
   // Self-collision
   if(collision(head, snake)){
     alert("Game Over! Score: " + score);
+    if(score > topScore){
+      topScore = score;
+      localStorage.setItem('topScore', topScore);
+      document.getElementById('topScore').innerText = topScore;
+    }
     snake = [{ x: 10 * scale, y: 10 * scale }];
     dx = scale; dy = 0; score = 0; speed = baseSpeed;
+    document.getElementById('score').innerText = score;
     return;
   }
 
@@ -145,6 +177,7 @@ function update(){
   // Eat food
   if(head.x === food.x && head.y === food.y){
     score++;
+    document.getElementById('score').innerText = score;
     food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
   } else {
     snake.pop();
