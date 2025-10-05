@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> nokia Snake Game </title>
+<title>Snake Game 90FPS Smooth</title>
 <style>
   body {
     background: #000;
@@ -75,56 +75,6 @@ let dx = scale;
 let dy = 0;
 let score = 0;
 
-// Draw & update function
-function draw() {
-  ctx.fillStyle = '#111';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Move snake
-  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
-
-  // Wrap-around (invisible wall) — Snake reappears on opposite side
-  if(head.x >= canvas.width) head.x = 0;
-  else if(head.x < 0) head.x = canvas.width - scale;
-  if(head.y >= canvas.height) head.y = 0;
-  else if(head.y < 0) head.y = canvas.height - scale;
-
-  // Collision with self
-  if(collision(head, snake)){
-    alert("Game Over! Score: " + score);
-    snake = [{ x: 10 * scale, y: 10 * scale }];
-    dx = scale;
-    dy = 0;
-    score = 0;
-    return;
-  }
-
-  snake.unshift(head);
-
-  // Eat food
-  if(head.x === food.x && head.y === food.y){
-    score++;
-    food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
-  } else {
-    snake.pop();
-  }
-
-  // Draw snake
-  ctx.fillStyle = '#0f0';
-  snake.forEach(part => ctx.fillRect(part.x, part.y, scale, scale));
-
-  // Draw food
-  ctx.fillStyle = '#f00';
-  ctx.fillRect(food.x, food.y, scale, scale);
-}
-
-function collision(head, array){
-  for(let i = 0; i < array.length; i++){
-    if(head.x === array[i].x && head.y === array[i].y) return true;
-  }
-  return false;
-}
-
 // Keyboard input
 window.addEventListener('keydown', e => {
   const key = e.key;
@@ -140,7 +90,6 @@ function setDirection(x, y){
   else if(dy === 0 && y !== 0) { dx = 0; dy = y; }
 }
 
-// Fast responsive touch buttons
 ['up','down','left','right'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('touchstart', (e)=>{
@@ -152,8 +101,70 @@ function setDirection(x, y){
   }, {passive:false});
 });
 
-// 60 FPS smooth game
-setInterval(draw, 1000/60);
+// Main game loop using requestAnimationFrame for smooth 90FPS
+let lastTime = 0;
+const fps = 90;
+const interval = 1000 / fps;
+
+function gameLoop(timestamp){
+  if(timestamp - lastTime > interval){
+    lastTime = timestamp - ((timestamp - lastTime) % interval);
+    update();
+    draw();
+  }
+  requestAnimationFrame(gameLoop);
+}
+
+// Update game state
+function update(){
+  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+  // Invisible walls (wrap-around)
+  if(head.x >= canvas.width) head.x = 0;
+  else if(head.x < 0) head.x = canvas.width - scale;
+  if(head.y >= canvas.height) head.y = 0;
+  else if(head.y < 0) head.y = canvas.height - scale;
+
+  // Self-collision
+  if(collision(head, snake)){
+    alert("Game Over! Score: " + score);
+    snake = [{ x: 10 * scale, y: 10 * scale }];
+    dx = scale; dy = 0; score = 0;
+    return;
+  }
+
+  snake.unshift(head);
+
+  // Eat food
+  if(head.x === food.x && head.y === food.y){
+    score++;
+    food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
+  } else {
+    snake.pop();
+  }
+}
+
+// Draw function
+function draw(){
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = '#0f0';
+  snake.forEach(part => ctx.fillRect(part.x, part.y, scale, scale));
+
+  ctx.fillStyle = '#f00';
+  ctx.fillRect(food.x, food.y, scale, scale);
+}
+
+function collision(head, array){
+  for(let i=0; i<array.length; i++){
+    if(head.x === array[i].x && head.y === array[i].y) return true;
+  }
+  return false;
+}
+
+// Start the loop
+requestAnimationFrame(gameLoop);
 
 </script>
 </body>
