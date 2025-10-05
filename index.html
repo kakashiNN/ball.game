@@ -1,114 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ball Bounce Game</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
-    }
-    canvas {
-      background: #111;
-      border: 3px solid #00ffea;
-      border-radius: 10px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Snake Game</title>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    let ballX = 200;
-    let ballY = 200;
-    let ballRadius = 10;
-    let ballSpeedX = 3;
-    let ballSpeedY = -3;
-
-    let paddleHeight = 10;
-    let paddleWidth = 80;
-    let paddleX = (canvas.width - paddleWidth) / 2;
-
-    let rightPressed = false;
-    let leftPressed = false;
-    let score = 0;
-
-    document.addEventListener("keydown", keyDownHandler);
-    document.addEventListener("keyup", keyUpHandler);
-
-    function keyDownHandler(e) {
-      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
-      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
-    }
-
-    function keyUpHandler(e) {
-      if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
-      else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
-    }
-
-    function drawBall() {
-      ctx.beginPath();
-      ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-      ctx.fillStyle = "#00ffea";
-      ctx.fill();
-      ctx.closePath();
-    }
-
-    function drawPaddle() {
-      ctx.beginPath();
-      ctx.rect(paddleX, canvas.height - paddleHeight - 10, paddleWidth, paddleHeight);
-      ctx.fillStyle = "#fff";
-      ctx.fill();
-      ctx.closePath();
-    }
-
-    function drawScore() {
-      ctx.font = "16px Arial";
-      ctx.fillStyle = "#00ffea";
-      ctx.fillText("Score: " + score, 10, 20);
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawBall();
-      drawPaddle();
-      drawScore();
-
-      if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
-        ballSpeedX = -ballSpeedX;
-      }
-      if (ballY + ballSpeedY < ballRadius) {
-        ballSpeedY = -ballSpeedY;
-      } else if (ballY + ballSpeedY > canvas.height - ballRadius - paddleHeight - 10) {
-        if (ballX > paddleX && ballX < paddleX + paddleWidth) {
-          ballSpeedY = -ballSpeedY;
-          score++;
-        } else if (ballY + ballSpeedY > canvas.height - ballRadius) {
-          alert("💀 Game Over! Your Score: " + score);
-          document.location.reload();
-        }
-      }
-
-      ballX += ballSpeedX;
-      ballY += ballSpeedY;
-
-      if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 7;
-      else if (leftPressed && paddleX > 0) paddleX -= 7;
-
-      requestAnimationFrame(draw);
-    }
-
-    draw();
-  </script>
+	<div id="game-container">
+		<canvas id="gc" class="game-canvas" width="400" height="400"></canvas>
+	</div>
+	<div class="keys">
+	  <a class="up arr" onclick="Snake.action('up')">
+	    <i class="chevron up"></i></a>
+	  <br />
+	  <a class="left arr" onclick="Snake.action('left')">
+	    <i class="chevron left"></i></a>
+	  <a class="down arr" onclick="Snake.action('down')">
+	    <i class="chevron down"></i></a>
+	  <a class="right arr" onclick="Snake.action('right')">
+	    <i class="chevron right"></i></a>
+	</div>
+	<script type="text/javascript" src="game.js"></script>
 </body>
 </html>
