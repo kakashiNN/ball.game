@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game (Mobile Friendly)</title>
+<title>Snake Game (Fast Mobile)</title>
 <style>
   body {
     background: #000;
@@ -18,20 +18,25 @@
     background: #111;
     display: block;
     margin-bottom: 20px;
-    touch-action: none; /* prevent scrolling on mobile */
+    touch-action: none;
+    width: 90vw;
+    height: 90vw; /* Responsive square canvas */
+    max-width: 500px;
+    max-height: 500px;
   }
   .controls {
     display: grid;
-    grid-template-columns: repeat(3, 60px);
-    grid-template-rows: repeat(3, 60px);
+    grid-template-columns: repeat(3, 70px);
+    grid-template-rows: repeat(3, 70px);
     gap: 10px;
   }
   .controls button {
-    font-size: 24px;
+    font-size: 28px;
     background: #222;
     color: #fff;
     border: 2px solid #555;
-    border-radius: 10px;
+    border-radius: 12px;
+    touch-action: manipulation;
   }
   .controls button:active {
     background: #555;
@@ -44,7 +49,7 @@
 </head>
 <body>
 
-<canvas id="game" width="400" height="400"></canvas>
+<canvas id="game" width="500" height="500"></canvas>
 
 <div class="controls">
   <div class="empty"></div>
@@ -62,15 +67,12 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-const scale = 20;
+const scale = 25; // bigger snake and food
 const rows = canvas.height / scale;
 const columns = canvas.width / scale;
 
 let snake = [{ x: 10 * scale, y: 10 * scale }];
-let food = {
-  x: Math.floor(Math.random() * columns) * scale,
-  y: Math.floor(Math.random() * rows) * scale
-};
+let food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
 
 let dx = scale;
 let dy = 0;
@@ -132,13 +134,19 @@ window.addEventListener('keydown', e => {
   else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
 });
 
-// Mobile buttons
-document.getElementById('up').addEventListener('touchstart', ()=>{ if(dy===0){ dx=0; dy=-scale; } });
-document.getElementById('down').addEventListener('touchstart', ()=>{ if(dy===0){ dx=0; dy=scale; } });
-document.getElementById('left').addEventListener('touchstart', ()=>{ if(dx===0){ dx=-scale; dy=0; } });
-document.getElementById('right').addEventListener('touchstart', ()=>{ if(dx===0){ dx=scale; dy=0; } });
+// Mobile buttons - touchstart + fast response
+function setDirection(x, y){
+  if(dx === 0 && x !== 0) { dx = x; dy = 0; }
+  else if(dy === 0 && y !== 0) { dx = 0; dy = y; }
+}
 
-setInterval(draw, 100);
+document.getElementById('up').addEventListener('touchstart', ()=>setDirection(0, -scale));
+document.getElementById('down').addEventListener('touchstart', ()=>setDirection(0, scale));
+document.getElementById('left').addEventListener('touchstart', ()=>setDirection(-scale, 0));
+document.getElementById('right').addEventListener('touchstart', ()=>setDirection(scale, 0));
+
+// Faster snake update
+setInterval(draw, 80); // smaller interval = faster movement
 </script>
 
 </body>
