@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game 90FPS Smooth</title>
+<title>Snake Game (Dynamic Speed)</title>
 <style>
   body {
     background: #000;
@@ -75,6 +75,12 @@ let dx = scale;
 let dy = 0;
 let score = 0;
 
+// Speed control
+let baseSpeed = 5; // initial speed
+let maxSpeed = 20; // max speed
+let speed = baseSpeed; 
+let lastTime = 0;
+
 // Keyboard input
 window.addEventListener('keydown', e => {
   const key = e.key;
@@ -101,22 +107,23 @@ function setDirection(x, y){
   }, {passive:false});
 });
 
-// Main game loop using requestAnimationFrame for smooth 90FPS
-let lastTime = 0;
-const fps = 90;
-const interval = 1000 / fps;
-
+// Main game loop
 function gameLoop(timestamp){
+  if(!lastTime) lastTime = timestamp;
+  const interval = 1000 / speed; // dynamic interval
   if(timestamp - lastTime > interval){
-    lastTime = timestamp - ((timestamp - lastTime) % interval);
+    lastTime = timestamp;
     update();
     draw();
   }
   requestAnimationFrame(gameLoop);
 }
 
-// Update game state
+// Update snake position & logic
 function update(){
+  // Increase speed as snake grows
+  speed = baseSpeed + Math.min(snake.length-1, maxSpeed-baseSpeed);
+
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
   // Invisible walls (wrap-around)
@@ -129,7 +136,7 @@ function update(){
   if(collision(head, snake)){
     alert("Game Over! Score: " + score);
     snake = [{ x: 10 * scale, y: 10 * scale }];
-    dx = scale; dy = 0; score = 0;
+    dx = scale; dy = 0; score = 0; speed = baseSpeed;
     return;
   }
 
@@ -144,7 +151,7 @@ function update(){
   }
 }
 
-// Draw function
+// Draw snake & food
 function draw(){
   ctx.fillStyle = '#111';
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -163,7 +170,7 @@ function collision(head, array){
   return false;
 }
 
-// Start the loop
+// Start game
 requestAnimationFrame(gameLoop);
 
 </script>
