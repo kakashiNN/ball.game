@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game (Fast Mobile)</title>
+<title>Snake Game (Wrap Walls + Fast)</title>
 <style>
   body {
     background: #000;
@@ -20,7 +20,7 @@
     margin-bottom: 20px;
     touch-action: none;
     width: 90vw;
-    height: 90vw; /* Responsive square canvas */
+    height: 90vw;
     max-width: 500px;
     max-height: 500px;
   }
@@ -41,10 +41,7 @@
   .controls button:active {
     background: #555;
   }
-  .empty {
-    background: transparent;
-    border: none;
-  }
+  .empty { background: transparent; border: none; }
 </style>
 </head>
 <body>
@@ -67,7 +64,7 @@
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-const scale = 25; // bigger snake and food
+const scale = 25;
 const rows = canvas.height / scale;
 const columns = canvas.width / scale;
 
@@ -78,24 +75,22 @@ let dx = scale;
 let dy = 0;
 let score = 0;
 
-// Draw function
+// Draw and update function
 function draw() {
   ctx.fillStyle = '#111';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw snake
-  ctx.fillStyle = '#0f0';
-  snake.forEach(part => ctx.fillRect(part.x, part.y, scale, scale));
-
-  // Draw food
-  ctx.fillStyle = '#f00';
-  ctx.fillRect(food.x, food.y, scale, scale);
-
   // Move snake
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-  // Collision check
-  if(head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || collision(head, snake)){
+  // Wall wrap-around
+  if(head.x >= canvas.width) head.x = 0;
+  else if(head.x < 0) head.x = canvas.width - scale;
+  if(head.y >= canvas.height) head.y = 0;
+  else if(head.y < 0) head.y = canvas.height - scale;
+
+  // Collision with self
+  if(collision(head, snake)){
     alert("Game Over! Score: " + score);
     snake = [{ x: 10 * scale, y: 10 * scale }];
     dx = scale;
@@ -109,13 +104,18 @@ function draw() {
   // Eat food
   if(head.x === food.x && head.y === food.y){
     score++;
-    food = {
-      x: Math.floor(Math.random() * columns) * scale,
-      y: Math.floor(Math.random() * rows) * scale
-    };
+    food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
   } else {
     snake.pop();
   }
+
+  // Draw snake
+  ctx.fillStyle = '#0f0';
+  snake.forEach(part => ctx.fillRect(part.x, part.y, scale, scale));
+
+  // Draw food
+  ctx.fillStyle = '#f00';
+  ctx.fillRect(food.x, food.y, scale, scale);
 }
 
 function collision(head, array){
@@ -134,19 +134,27 @@ window.addEventListener('keydown', e => {
   else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
 });
 
-// Mobile buttons - touchstart + fast response
+// Mobile buttons
 function setDirection(x, y){
   if(dx === 0 && x !== 0) { dx = x; dy = 0; }
   else if(dy === 0 && y !== 0) { dx = 0; dy = y; }
 }
 
-document.getElementById('up').addEventListener('touchstart', ()=>setDirection(0, -scale));
-document.getElementById('down').addEventListener('touchstart', ()=>setDirection(0, scale));
-document.getElementById('left').addEventListener('touchstart', ()=>setDirection(-scale, 0));
-document.getElementById('right').addEventListener('touchstart', ()=>setDirection(scale, 0));
+// Touch event - fast and responsive
+const btns = ['up','down','left','right'];
+btns.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', (e)=>{
+    e.preventDefault();
+    if(id==='up') setDirection(0,-scale);
+    else if(id==='down') setDirection(0,scale);
+    else if(id==='left') setDirection(-scale,0);
+    else if(id==='right') setDirection(scale,0);
+  }, {passive:false});
+});
 
-// Faster snake update
-setInterval(draw, 80); // smaller interval = faster movement
+// 60 FPS
+setInterval(draw, 1000/60); // ~16ms per frame
 </script>
 
 </body>
