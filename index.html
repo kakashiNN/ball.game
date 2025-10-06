@@ -3,10 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game made by - Kakashi</title>
-<link rel="stylesheet" href="style.css">
+<title>Snake Game - Multi Control</title>
 <style>
-/* --- extra UI styles for menu & popup --- */
+body {
+  margin: 0;
+  background: #111;
+  color: #0f0;
+  font-family: 'Lato', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  height: 100vh;
+}
+.game-canvas {
+  border: 2px solid #0f0;
+  background: #000;
+  margin-top: 20px;
+  max-width: 90vw;
+  max-height: 90vw;
+}
 .menu {
   position: absolute;
   top: 10px;
@@ -73,20 +89,44 @@
 .popup-content button.cancel {
   background: #f00;
 }
+.controls {
+  display: grid;
+  grid-template-columns: 70px 70px 70px;
+  grid-template-rows: 70px 70px 70px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  gap: 10px;
+}
+.control-btn {
+  width: 70px;
+  height: 70px;
+  background: #333;
+  color: #0f0;
+  font-size: 30px;
+  border: 2px solid #0f0;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  cursor: pointer;
+}
+.control-btn:active {
+  background: #0a0;
+}
 </style>
 </head>
 <body>
 
 <div class="menu" id="menuBtn">⋮</div>
 
-<!-- User List Box -->
 <div id="userListBox">
   <div><b>👥 Players List</b></div>
   <div>Total Players: <span id="userCount">0</span></div>
   <ul id="userList"></ul>
 </div>
 
-<!-- Popup for Agree/Cancel -->
 <div class="popup" id="popup">
   <div class="popup-content">
     <h3>🎮 Start Snake Game?</h3>
@@ -105,8 +145,19 @@
   <div>Your Score: <span id="score">0</span></div>
 </div>
 
-<div id="game-container">
-  <canvas id="game" class="game-canvas" width="500" height="500"></canvas>
+<canvas id="game" class="game-canvas" width="500" height="500"></canvas>
+
+<!-- Mobile Controls -->
+<div class="controls">
+  <div></div>
+  <div id="up" class="control-btn">⬆️</div>
+  <div></div>
+  <div id="left" class="control-btn">⬅️</div>
+  <div></div>
+  <div id="right" class="control-btn">➡️</div>
+  <div></div>
+  <div id="down" class="control-btn">⬇️</div>
+  <div></div>
 </div>
 
 <script>
@@ -121,22 +172,18 @@ const userListBox = document.getElementById('userListBox');
 
 let username = null;
 
-// Handle popup
+// Popup
 agreeBtn.addEventListener('click', () => {
   username = usernameInput.value.trim();
-  if (!username) {
-    username = "User" + Math.floor(Math.random() * 10000);
-  }
+  if (!username) username = "User" + Math.floor(Math.random() * 10000);
   addUser(username);
   popup.style.display = "none";
   startGame();
 });
-
 cancelBtn.addEventListener('click', () => {
   alert("❌ You cancelled the game.");
   popup.style.display = "none";
 });
-
 menuBtn.addEventListener('click', () => {
   userListBox.style.display = (userListBox.style.display === "none" || userListBox.style.display === "") ? "block" : "none";
 });
@@ -153,28 +200,22 @@ function addUser(name){
 
 function updateUserList(){
   const users = JSON.parse(localStorage.getItem('users'));
-  const list = document.getElementById('userList');
-  const count = document.getElementById('userCount');
-  list.innerHTML = users.map(u => `<li>${u}</li>`).join('');
-  count.textContent = users.length;
+  document.getElementById('userList').innerHTML = users.map(u => `<li>${u}</li>`).join('');
+  document.getElementById('userCount').textContent = users.length;
 }
 updateUserList();
 
-// === GAME LOGIC ===
+// === GAME VARIABLES ===
 const scale = 25;
 const rows = canvas.height / scale;
-const columns = canvas.width / scale;
-let snake = [{ x: 10 * scale, y: 10 * scale }];
-let food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
-let dx = scale;
-let dy = 0;
-let score = 0;
-let baseSpeed = 3;
-let maxSpeed = 18;
-let speed = baseSpeed;
+const cols = canvas.width / scale;
+let snake = [{x:10*scale, y:10*scale}];
+let food = {x:Math.floor(Math.random()*cols)*scale, y:Math.floor(Math.random()*rows)*scale};
+let dx = scale, dy = 0;
+let score = 0, baseSpeed = 3, maxSpeed = 18, speed = baseSpeed;
 let lastTime = 0;
 
-// Visitors + Top Score
+// === SCORE & VISITORS ===
 if(!localStorage.getItem('visitorCount')) localStorage.setItem('visitorCount', 0);
 let visitorCount = parseInt(localStorage.getItem('visitorCount')) + 1;
 localStorage.setItem('visitorCount', visitorCount);
@@ -184,19 +225,23 @@ if(!localStorage.getItem('topScore')) localStorage.setItem('topScore', 0);
 let topScore = parseInt(localStorage.getItem('topScore'));
 document.getElementById('topScore').innerText = topScore;
 
-// === Game Loop ===
-function startGame(){
-  window.addEventListener('keydown', e => {
-    const key = e.key;
-    if(key === 'ArrowUp' && dy === 0){ dx = 0; dy = -scale; }
-    else if(key === 'ArrowDown' && dy === 0){ dx = 0; dy = scale; }
-    else if(key === 'ArrowLeft' && dx === 0){ dx = -scale; dy = 0; }
-    else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
-  });
-  requestAnimationFrame(gameLoop);
-}
+// === CONTROLS ===
+window.addEventListener('keydown', e => {
+  if(e.key === 'ArrowUp' && dy === 0){ dx=0; dy=-scale; }
+  else if(e.key === 'ArrowDown' && dy === 0){ dx=0; dy=scale; }
+  else if(e.key === 'ArrowLeft' && dx === 0){ dx=-scale; dy=0; }
+  else if(e.key === 'ArrowRight' && dx === 0){ dx=scale; dy=0; }
+});
+document.getElementById('up').onclick = () => { if(dy===0){dx=0;dy=-scale;} };
+document.getElementById('down').onclick = () => { if(dy===0){dx=0;dy=scale;} };
+document.getElementById('left').onclick = () => { if(dx===0){dx=-scale;dy=0;} };
+document.getElementById('right').onclick = () => { if(dx===0){dx=scale;dy=0;} };
 
-function gameLoop(timestamp){
+// === GAME LOOP ===
+function startGame(){
+  requestAnimationFrame(loop);
+}
+function loop(timestamp){
   if(!lastTime) lastTime = timestamp;
   const interval = 1000 / speed;
   if(timestamp - lastTime > interval){
@@ -204,80 +249,66 @@ function gameLoop(timestamp){
     update();
     draw();
   }
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
 
 function update(){
-  let growthFactor = Math.min(score / 40, 1);
-  speed = baseSpeed + (maxSpeed - baseSpeed) * growthFactor;
-
-  let head = { x: snake[0].x + dx, y: snake[0].y + dy };
-  if(head.x >= canvas.width) head.x = 0;
-  else if(head.x < 0) head.x = canvas.width - scale;
-  if(head.y >= canvas.height) head.y = 0;
-  else if(head.y < 0) head.y = canvas.height - scale;
+  let growth = Math.min(score/40,1);
+  speed = baseSpeed + (maxSpeed - baseSpeed)*growth;
+  let head = {x:snake[0].x + dx, y:snake[0].y + dy};
+  if(head.x>=canvas.width) head.x=0;
+  else if(head.x<0) head.x=canvas.width-scale;
+  if(head.y>=canvas.height) head.y=0;
+  else if(head.y<0) head.y=canvas.height-scale;
 
   if(collision(head, snake)){
-    alert("💀 Game Over! Score: " + score);
-    if(score > topScore){
-      topScore = score;
+    alert("💀 Game Over! Score: "+score);
+    if(score>topScore){
+      topScore=score;
       localStorage.setItem('topScore', topScore);
       document.getElementById('topScore').innerText = topScore;
     }
-    snake = [{ x: 10 * scale, y: 10 * scale }];
-    dx = scale; dy = 0; score = 0; speed = baseSpeed;
-    document.getElementById('score').innerText = score;
+    snake=[{x:10*scale,y:10*scale}];
+    dx=scale; dy=0; score=0; speed=baseSpeed;
+    document.getElementById('score').innerText=score;
     return;
   }
 
   snake.unshift(head);
-  if(head.x === food.x && head.y === food.y){
+  if(head.x===food.x && head.y===food.y){
     score++;
-    document.getElementById('score').innerText = score;
-    food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
-  } else {
-    snake.pop();
-  }
+    document.getElementById('score').innerText=score;
+    food={x:Math.floor(Math.random()*cols)*scale, y:Math.floor(Math.random()*rows)*scale};
+  } else snake.pop();
 }
 
 function draw(){
-  ctx.fillStyle = '#111';
+  ctx.fillStyle='#000';
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  snake.forEach((part) => {
-    const grad = ctx.createLinearGradient(part.x, part.y, part.x + scale, part.y + scale);
-    grad.addColorStop(0, '#0f0');
-    grad.addColorStop(1, '#070');
-    ctx.fillStyle = grad;
+  snake.forEach(p=>{
+    const grad=ctx.createLinearGradient(p.x,p.y,p.x+scale,p.y+scale);
+    grad.addColorStop(0,'#0f0');
+    grad.addColorStop(1,'#070');
+    ctx.fillStyle=grad;
     ctx.beginPath();
-    ctx.roundRect(part.x, part.y, scale, scale, 6);
+    ctx.roundRect(p.x,p.y,scale,scale,6);
     ctx.fill();
-    ctx.strokeStyle = '#0a0';
-    ctx.stroke();
   });
 
-  const cx = food.x + scale/2;
-  const cy = food.y + scale/2;
-  const r = scale/2.2;
-  const appleGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, r);
-  appleGrad.addColorStop(0, '#ff6666');
-  appleGrad.addColorStop(1, '#b30000');
-  ctx.fillStyle = appleGrad;
+  const cx=food.x+scale/2, cy=food.y+scale/2, r=scale/2.2;
+  const appleGrad=ctx.createRadialGradient(cx-3,cy-3,2,cx,cy,r);
+  appleGrad.addColorStop(0,'#ff6666');
+  appleGrad.addColorStop(1,'#b30000');
+  ctx.fillStyle=appleGrad;
   ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI*2);
+  ctx.arc(cx,cy,r,0,Math.PI*2);
   ctx.fill();
-
-  ctx.strokeStyle = '#3b1';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(cx, cy - r);
-  ctx.lineTo(cx - 3, cy - r - 6);
-  ctx.stroke();
 }
 
-function collision(head, array){
-  for(let i=1;i<array.length;i++){
-    if(head.x === array[i].x && head.y === array[i].y) return true;
+function collision(h, arr){
+  for(let i=1;i<arr.length;i++){
+    if(h.x===arr[i].x && h.y===arr[i].y) return true;
   }
   return false;
 }
