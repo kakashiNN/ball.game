@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game made by kakashi </title>
+<title>Snake Game made by Kakashi</title>
 <style>
   body {
     background: #000;
@@ -25,6 +25,8 @@
     height: 90vw;
     max-width: 500px;
     max-height: 500px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #0f0a;
   }
   .controls {
     display: grid;
@@ -53,7 +55,7 @@
 </head>
 <body>
 
-<h2>Snake Game</h2>
+<h2>🐍 Snake Game</h2>
 <div class="info">
   <div>Visitors: <span id="visitorCount">0</span></div>
   <div>Top Score: <span id="topScore">0</span></div>
@@ -62,7 +64,6 @@
 
 <canvas id="game" width="500" height="500"></canvas>
 
-<!-- Mobile keypad buttons -->
 <div class="controls">
   <div class="empty"></div>
   <button id="up">⬆</button>
@@ -90,13 +91,13 @@ let dx = scale;
 let dy = 0;
 let score = 0;
 
-// Speed control
-let baseSpeed = 5;
-let maxSpeed = 20;
+// 🔹 Speed system (smooth acceleration)
+let baseSpeed = 3;   // starting slow speed
+let maxSpeed = 18;   // max speed later
 let speed = baseSpeed;
 let lastTime = 0;
 
-// Visitors & Top Score using localStorage
+// Visitor + Score system
 if(!localStorage.getItem('visitorCount')) localStorage.setItem('visitorCount', 0);
 let visitorCount = parseInt(localStorage.getItem('visitorCount')) + 1;
 localStorage.setItem('visitorCount', visitorCount);
@@ -108,7 +109,7 @@ document.getElementById('topScore').innerText = topScore;
 
 document.getElementById('score').innerText = score;
 
-// Keyboard input
+// Controls
 window.addEventListener('keydown', e => {
   const key = e.key;
   if(key === 'ArrowUp' && dy === 0){ dx = 0; dy = -scale; }
@@ -117,12 +118,10 @@ window.addEventListener('keydown', e => {
   else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
 });
 
-// Mobile buttons
 function setDirection(x, y){
   if(dx === 0 && x !== 0){ dx = x; dy = 0; }
   else if(dy === 0 && y !== 0){ dx = 0; dy = y; }
 }
-
 ['up','down','left','right'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('touchstart', e => {
@@ -134,7 +133,6 @@ function setDirection(x, y){
   }, {passive:false});
 });
 
-// Game Loop
 function gameLoop(timestamp){
   if(!lastTime) lastTime = timestamp;
   const interval = 1000 / speed;
@@ -146,21 +144,21 @@ function gameLoop(timestamp){
   requestAnimationFrame(gameLoop);
 }
 
-// Update snake
 function update(){
-  speed = baseSpeed + Math.min(snake.length-1, maxSpeed-baseSpeed);
+  // 🔹 Smooth gradual speed increase
+  // Every apple slightly increases speed up to maxSpeed
+  let growthFactor = Math.min(score / 40, 1); // after ~40 apples, full speed
+  speed = baseSpeed + (maxSpeed - baseSpeed) * growthFactor;
 
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-  // Invisible walls
   if(head.x >= canvas.width) head.x = 0;
   else if(head.x < 0) head.x = canvas.width - scale;
   if(head.y >= canvas.height) head.y = 0;
   else if(head.y < 0) head.y = canvas.height - scale;
 
-  // Self-collision
   if(collision(head, snake)){
-    alert("Game Over! Score: " + score);
+    alert("💀 Game Over! Score: " + score);
     if(score > topScore){
       topScore = score;
       localStorage.setItem('topScore', topScore);
@@ -174,7 +172,6 @@ function update(){
 
   snake.unshift(head);
 
-  // Eat food
   if(head.x === food.x && head.y === food.y){
     score++;
     document.getElementById('score').innerText = score;
@@ -184,28 +181,55 @@ function update(){
   }
 }
 
-// Draw snake & food
+// 🎨 Drawing part (snake + apple)
 function draw(){
   ctx.fillStyle = '#111';
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle = '#0f0';
-  snake.forEach(part => ctx.fillRect(part.x, part.y, scale, scale));
+  // Snake with gradient look
+  snake.forEach((part, i) => {
+    const grad = ctx.createLinearGradient(part.x, part.y, part.x + scale, part.y + scale);
+    grad.addColorStop(0, '#0f0');
+    grad.addColorStop(1, '#070');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(part.x, part.y, scale, scale, 6);
+    ctx.fill();
+    ctx.strokeStyle = '#0a0';
+    ctx.stroke();
+  });
 
-  ctx.fillStyle = '#f00';
-  ctx.fillRect(food.x, food.y, scale, scale);
+  // 🍎 Apple look
+  const centerX = food.x + scale / 2;
+  const centerY = food.y + scale / 2;
+  const radius = scale / 2.2;
+
+  ctx.beginPath();
+  const appleGrad = ctx.createRadialGradient(centerX - 3, centerY - 3, 2, centerX, centerY, radius);
+  appleGrad.addColorStop(0, '#ff6666');
+  appleGrad.addColorStop(1, '#b30000');
+  ctx.fillStyle = appleGrad;
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 🍏 Stem
+  ctx.strokeStyle = '#3b1';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX - 3, centerY - radius - 6);
+  ctx.stroke();
 }
 
 function collision(head, array){
-  for(let i=0;i<array.length;i++){
+  for(let i=1;i<array.length;i++){
     if(head.x === array[i].x && head.y === array[i].y) return true;
   }
   return false;
 }
 
-// Start game
+// Start the game
 requestAnimationFrame(gameLoop);
-
 </script>
 </body>
 </html>
