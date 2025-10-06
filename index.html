@@ -3,57 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Snake Game made by Kakashi</title>
+<title>Snake Game made by - Kakashi</title>
+<link rel="stylesheet" href="style.css">
 <style>
-  body {
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin: 0;
-    height: 100vh;
-    color: #fff;
-    font-family: sans-serif;
-  }
-  canvas {
-    background: #111;
-    display: block;
-    margin-bottom: 10px;
-    touch-action: none;
-    width: 90vw;
-    height: 90vw;
-    max-width: 500px;
-    max-height: 500px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #0f0a;
-  }
-  .controls {
-    display: grid;
-    grid-template-columns: repeat(3, 70px);
-    grid-template-rows: repeat(3, 70px);
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .controls button {
-    font-size: 28px;
-    background: #222;
-    color: #fff;
-    border: 2px solid #555;
-    border-radius: 12px;
-    touch-action: manipulation;
-  }
-  .controls button:active {
-    background: #555;
-  }
-  .empty { background: transparent; border: none; }
-  .info {
-    margin-bottom: 10px;
-    text-align: center;
-  }
+/* --- extra UI styles for menu & popup --- */
+.menu {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 26px;
+  cursor: pointer;
+  user-select: none;
+}
+#userListBox {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  background: rgba(20,20,20,0.95);
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 8px;
+  padding: 10px;
+  width: 220px;
+  display: none;
+  font-size: 14px;
+  box-shadow: 0 0 10px #0f0;
+}
+#userListBox ul {
+  margin: 5px 0 0;
+  padding-left: 20px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.popup-content {
+  background: #111;
+  color: #0f0;
+  border: 1px solid #0f0;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  width: 280px;
+}
+.popup-content input {
+  background: #222;
+  border: 1px solid #0f0;
+  border-radius: 5px;
+  padding: 5px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.popup-content button {
+  background: #0f0;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 5px;
+}
+.popup-content button.cancel {
+  background: #f00;
+}
 </style>
 </head>
 <body>
+
+<div class="menu" id="menuBtn">⋮</div>
+
+<!-- User List Box -->
+<div id="userListBox">
+  <div><b>👥 Players List</b></div>
+  <div>Total Players: <span id="userCount">0</span></div>
+  <ul id="userList"></ul>
+</div>
+
+<!-- Popup for Agree/Cancel -->
+<div class="popup" id="popup">
+  <div class="popup-content">
+    <h3>🎮 Start Snake Game?</h3>
+    <p>Press “Agree” to join and play.</p>
+    <input type="text" id="usernameInput" placeholder="Enter username (optional)">
+    <br>
+    <button id="agreeBtn">Agree</button>
+    <button class="cancel" id="cancelBtn">Cancel</button>
+  </div>
+</div>
 
 <h2>🐍 Snake Game</h2>
 <div class="info">
@@ -62,42 +105,76 @@
   <div>Your Score: <span id="score">0</span></div>
 </div>
 
-<canvas id="game" width="500" height="500"></canvas>
-
-<div class="controls">
-  <div class="empty"></div>
-  <button id="up">⬆</button>
-  <div class="empty"></div>
-  <button id="left">⬅</button>
-  <div class="empty"></div>
-  <button id="right">➡</button>
-  <div class="empty"></div>
-  <button id="down">⬇</button>
-  <div class="empty"></div>
+<div id="game-container">
+  <canvas id="game" class="game-canvas" width="500" height="500"></canvas>
 </div>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const popup = document.getElementById('popup');
+const agreeBtn = document.getElementById('agreeBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const usernameInput = document.getElementById('usernameInput');
+const menuBtn = document.getElementById('menuBtn');
+const userListBox = document.getElementById('userListBox');
 
+let username = null;
+
+// Handle popup
+agreeBtn.addEventListener('click', () => {
+  username = usernameInput.value.trim();
+  if (!username) {
+    username = "User" + Math.floor(Math.random() * 10000);
+  }
+  addUser(username);
+  popup.style.display = "none";
+  startGame();
+});
+
+cancelBtn.addEventListener('click', () => {
+  alert("❌ You cancelled the game.");
+  popup.style.display = "none";
+});
+
+menuBtn.addEventListener('click', () => {
+  userListBox.style.display = (userListBox.style.display === "none" || userListBox.style.display === "") ? "block" : "none";
+});
+
+// === USER SYSTEM ===
+if(!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify([]));
+
+function addUser(name){
+  let users = JSON.parse(localStorage.getItem('users'));
+  if(!users.includes(name)) users.push(name);
+  localStorage.setItem('users', JSON.stringify(users));
+  updateUserList();
+}
+
+function updateUserList(){
+  const users = JSON.parse(localStorage.getItem('users'));
+  const list = document.getElementById('userList');
+  const count = document.getElementById('userCount');
+  list.innerHTML = users.map(u => `<li>${u}</li>`).join('');
+  count.textContent = users.length;
+}
+updateUserList();
+
+// === GAME LOGIC ===
 const scale = 25;
 const rows = canvas.height / scale;
 const columns = canvas.width / scale;
-
 let snake = [{ x: 10 * scale, y: 10 * scale }];
 let food = { x: Math.floor(Math.random() * columns) * scale, y: Math.floor(Math.random() * rows) * scale };
-
 let dx = scale;
 let dy = 0;
 let score = 0;
-
-// 🔹 Speed system (smooth acceleration)
-let baseSpeed = 3;   // starting slow speed
-let maxSpeed = 18;   // max speed later
+let baseSpeed = 3;
+let maxSpeed = 18;
 let speed = baseSpeed;
 let lastTime = 0;
 
-// Visitor + Score system
+// Visitors + Top Score
 if(!localStorage.getItem('visitorCount')) localStorage.setItem('visitorCount', 0);
 let visitorCount = parseInt(localStorage.getItem('visitorCount')) + 1;
 localStorage.setItem('visitorCount', visitorCount);
@@ -107,31 +184,17 @@ if(!localStorage.getItem('topScore')) localStorage.setItem('topScore', 0);
 let topScore = parseInt(localStorage.getItem('topScore'));
 document.getElementById('topScore').innerText = topScore;
 
-document.getElementById('score').innerText = score;
-
-// Controls
-window.addEventListener('keydown', e => {
-  const key = e.key;
-  if(key === 'ArrowUp' && dy === 0){ dx = 0; dy = -scale; }
-  else if(key === 'ArrowDown' && dy === 0){ dx = 0; dy = scale; }
-  else if(key === 'ArrowLeft' && dx === 0){ dx = -scale; dy = 0; }
-  else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
-});
-
-function setDirection(x, y){
-  if(dx === 0 && x !== 0){ dx = x; dy = 0; }
-  else if(dy === 0 && y !== 0){ dx = 0; dy = y; }
+// === Game Loop ===
+function startGame(){
+  window.addEventListener('keydown', e => {
+    const key = e.key;
+    if(key === 'ArrowUp' && dy === 0){ dx = 0; dy = -scale; }
+    else if(key === 'ArrowDown' && dy === 0){ dx = 0; dy = scale; }
+    else if(key === 'ArrowLeft' && dx === 0){ dx = -scale; dy = 0; }
+    else if(key === 'ArrowRight' && dx === 0){ dx = scale; dy = 0; }
+  });
+  requestAnimationFrame(gameLoop);
 }
-['up','down','left','right'].forEach(id => {
-  const el = document.getElementById(id);
-  el.addEventListener('touchstart', e => {
-    e.preventDefault();
-    if(id==='up') setDirection(0,-scale);
-    else if(id==='down') setDirection(0,scale);
-    else if(id==='left') setDirection(-scale,0);
-    else if(id==='right') setDirection(scale,0);
-  }, {passive:false});
-});
 
 function gameLoop(timestamp){
   if(!lastTime) lastTime = timestamp;
@@ -145,13 +208,10 @@ function gameLoop(timestamp){
 }
 
 function update(){
-  // 🔹 Smooth gradual speed increase
-  // Every apple slightly increases speed up to maxSpeed
-  let growthFactor = Math.min(score / 40, 1); // after ~40 apples, full speed
+  let growthFactor = Math.min(score / 40, 1);
   speed = baseSpeed + (maxSpeed - baseSpeed) * growthFactor;
 
   let head = { x: snake[0].x + dx, y: snake[0].y + dy };
-
   if(head.x >= canvas.width) head.x = 0;
   else if(head.x < 0) head.x = canvas.width - scale;
   if(head.y >= canvas.height) head.y = 0;
@@ -171,7 +231,6 @@ function update(){
   }
 
   snake.unshift(head);
-
   if(head.x === food.x && head.y === food.y){
     score++;
     document.getElementById('score').innerText = score;
@@ -181,13 +240,11 @@ function update(){
   }
 }
 
-// 🎨 Drawing part (snake + apple)
 function draw(){
   ctx.fillStyle = '#111';
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // Snake with gradient look
-  snake.forEach((part, i) => {
+  snake.forEach((part) => {
     const grad = ctx.createLinearGradient(part.x, part.y, part.x + scale, part.y + scale);
     grad.addColorStop(0, '#0f0');
     grad.addColorStop(1, '#070');
@@ -199,25 +256,22 @@ function draw(){
     ctx.stroke();
   });
 
-  // 🍎 Apple look
-  const centerX = food.x + scale / 2;
-  const centerY = food.y + scale / 2;
-  const radius = scale / 2.2;
-
-  ctx.beginPath();
-  const appleGrad = ctx.createRadialGradient(centerX - 3, centerY - 3, 2, centerX, centerY, radius);
+  const cx = food.x + scale/2;
+  const cy = food.y + scale/2;
+  const r = scale/2.2;
+  const appleGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, r);
   appleGrad.addColorStop(0, '#ff6666');
   appleGrad.addColorStop(1, '#b30000');
   ctx.fillStyle = appleGrad;
-  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI*2);
   ctx.fill();
 
-  // 🍏 Stem
   ctx.strokeStyle = '#3b1';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(centerX, centerY - radius);
-  ctx.lineTo(centerX - 3, centerY - radius - 6);
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx - 3, cy - r - 6);
   ctx.stroke();
 }
 
@@ -227,9 +281,6 @@ function collision(head, array){
   }
   return false;
 }
-
-// Start the game
-requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
