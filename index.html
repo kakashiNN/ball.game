@@ -3,83 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snake Game 🍎 by Kakashi</title>
+  <title>Ultra Snake Game 🍎</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
-      background: #222;
-      font-family: 'Lato', sans-serif;
+      background: radial-gradient(circle at center, #001100, #000);
+      font-family: 'Poppins', sans-serif;
       color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    #game-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: rgba(220, 220, 220, 0.15);
-      border-radius: 15px;
-      margin-top: 20px;
-      padding: 10px;
-    }
-
-    canvas {
-      background: #000;
-      border-radius: 15px;
-    }
-
-    .info {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 18px;
-    }
-
-    .controls {
+    h1 {
+      text-shadow: 0 0 10px lime, 0 0 20px green;
       margin-top: 15px;
-      text-align: center;
-    }
-
-    .arr {
-      cursor: pointer;
-      width: 70px;
-      height: 70px;
-      text-align: center;
-      line-height: 65px;
-      background: gray;
-      color: white;
-      font-size: 40px;
-      border-radius: 15px;
-      margin: 5px;
-      user-select: none;
-      display: inline-block;
-      box-shadow: 0 5px #222;
-    }
-
-    .arr:active {
-      background: #555;
-      box-shadow: 0 2px #111;
-      transform: translateY(2px);
+      font-size: 2em;
     }
 
     #menuBtn {
       position: absolute;
       top: 10px;
-      right: 10px;
-      font-size: 28px;
+      right: 15px;
+      font-size: 30px;
       cursor: pointer;
+      user-select: none;
     }
 
     #userListBox {
       position: absolute;
       top: 50px;
       right: 10px;
-      background: rgba(30, 30, 30, 0.9);
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid lime;
       border-radius: 10px;
       padding: 10px;
       display: none;
+      max-height: 250px;
+      overflow-y: auto;
     }
 
     #popup {
@@ -88,7 +55,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       justify-content: center;
@@ -98,30 +65,88 @@
     }
 
     #popup input {
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: 2px solid lime;
       margin-top: 10px;
+      background: black;
+      color: white;
     }
 
     #popup button {
       margin: 10px;
-      padding: 8px 20px;
+      padding: 10px 25px;
       font-size: 16px;
       border: none;
       border-radius: 5px;
-      background: #28a745;
-      color: white;
       cursor: pointer;
+      transition: 0.2s;
     }
 
-    #popup button#cancelBtn {
-      background: #dc3545;
+    #agreeBtn {
+      background: lime;
+      color: black;
     }
+
+    #cancelBtn {
+      background: crimson;
+      color: white;
+    }
+
+    #agreeBtn:hover {
+      background: #00ff99;
+    }
+
+    #cancelBtn:hover {
+      background: #ff6666;
+    }
+
+    canvas {
+      background: linear-gradient(135deg, #001900, #000);
+      box-shadow: 0 0 30px #00ff00, inset 0 0 20px #003300;
+      border-radius: 20px;
+      margin-top: 20px;
+    }
+
+    .info {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 10px;
+      text-shadow: 0 0 5px lime;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      grid-template-rows: repeat(3, 80px);
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .controls button {
+      font-size: 30px;
+      border: 2px solid lime;
+      border-radius: 15px;
+      background: rgba(0, 50, 0, 0.8);
+      color: white;
+      box-shadow: 0 0 15px #00ff00;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .controls button:active {
+      transform: scale(0.9);
+      background: lime;
+      color: black;
+    }
+
+    .empty { background: transparent; border: none; box-shadow: none; }
   </style>
 </head>
 <body>
+  <h1>🐍 Ultra Snake Game 🍎</h1>
   <div id="menuBtn">⋮</div>
   <div id="userListBox">
     <h4>👥 Users (<span id="userCount">0</span>)</h4>
@@ -129,87 +154,87 @@
   </div>
 
   <div id="popup">
-    <h2>🍎 Welcome to Snake Game</h2>
-    <p>Enter your username or continue:</p>
-    <input type="text" id="usernameInput" placeholder="Enter username" />
+    <h2>Welcome to Snake Game!</h2>
+    <p>Enter your username to start:</p>
+    <input type="text" id="usernameInput" placeholder="Your name..." />
     <div>
       <button id="agreeBtn">Agree</button>
       <button id="cancelBtn">Cancel</button>
     </div>
   </div>
 
-  <div id="game-container">
-    <canvas id="game" width="400" height="400"></canvas>
+  <canvas id="game" width="450" height="450"></canvas>
 
-    <div class="info">
-      🧍 Visitors: <span id="visitorCount">0</span> | 
-      🏆 Top Score: <span id="topScore">0</span> | 
-      🎯 Your Score: <span id="score">0</span>
-    </div>
+  <div class="info">
+    🧍 Visitors: <span id="visitorCount">0</span> |
+    🏆 Top Score: <span id="topScore">0</span> |
+    🎯 Your Score: <span id="score">0</span>
+  </div>
 
-    <div class="controls">
-      <div><div class="arr" id="up">⬆️</div></div>
-      <div>
-        <div class="arr" id="left">⬅️</div>
-        <div class="arr" id="down">⬇️</div>
-        <div class="arr" id="right">➡️</div>
-      </div>
-    </div>
+  <div class="controls">
+    <div class="empty"></div>
+    <button id="up">⬆️</button>
+    <div class="empty"></div>
+    <button id="left">⬅️</button>
+    <div class="empty"></div>
+    <button id="right">➡️</button>
+    <div class="empty"></div>
+    <button id="down">⬇️</button>
+    <div class="empty"></div>
   </div>
 
   <script>
-    const canvas = document.getElementById('game');
-    const ctx = canvas.getContext('2d');
-    const popup = document.getElementById('popup');
-    const agreeBtn = document.getElementById('agreeBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const usernameInput = document.getElementById('usernameInput');
-    const menuBtn = document.getElementById('menuBtn');
-    const userListBox = document.getElementById('userListBox');
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const popup = document.getElementById("popup");
+    const agreeBtn = document.getElementById("agreeBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const usernameInput = document.getElementById("usernameInput");
+    const menuBtn = document.getElementById("menuBtn");
+    const userListBox = document.getElementById("userListBox");
 
     let username = null;
 
     // === USER SYSTEM ===
-    if(!localStorage.getItem('users')) localStorage.setItem('users', JSON.stringify([]));
+    if (!localStorage.getItem("users")) localStorage.setItem("users", JSON.stringify([]));
 
-    if(!localStorage.getItem('username')) {
+    if (!localStorage.getItem("username")) {
       popup.style.display = "flex";
     } else {
-      username = localStorage.getItem('username');
+      username = localStorage.getItem("username");
       addUser(username);
       startGame();
     }
 
-    agreeBtn.addEventListener('click', () => {
-      username = usernameInput.value.trim();
-      if (!username) username = "User" + Math.floor(Math.random() * 10000);
-      localStorage.setItem('username', username);
+    agreeBtn.addEventListener("click", () => {
+      username = usernameInput.value.trim() || "User" + Math.floor(Math.random() * 10000);
+      localStorage.setItem("username", username);
       addUser(username);
       popup.style.display = "none";
       startGame();
     });
 
-    cancelBtn.addEventListener('click', () => {
+    cancelBtn.addEventListener("click", () => {
       alert("❌ You cancelled the game.");
       popup.style.display = "none";
     });
 
-    menuBtn.addEventListener('click', () => {
-      userListBox.style.display =
-        userListBox.style.display === "block" ? "none" : "block";
+    menuBtn.addEventListener("click", () => {
+      userListBox.style.display = userListBox.style.display === "block" ? "none" : "block";
     });
 
-    function addUser(name){
-      let users = JSON.parse(localStorage.getItem('users'));
-      if(!users.includes(name)) users.push(name);
-      localStorage.setItem('users', JSON.stringify(users));
+    function addUser(name) {
+      let users = JSON.parse(localStorage.getItem("users"));
+      if (!users.includes(name)) users.push(name);
+      localStorage.setItem("users", JSON.stringify(users));
       updateUserList();
     }
 
-    function updateUserList(){
-      const users = JSON.parse(localStorage.getItem('users'));
-      document.getElementById('userList').innerHTML = users.map(u => `<li>${u}</li>`).join('');
-      document.getElementById('userCount').textContent = users.length;
+    function updateUserList() {
+      const users = JSON.parse(localStorage.getItem("users"));
+      document.getElementById("userList").innerHTML = users.map((u) => `<li>${u}</li>`).join("");
+      document.getElementById("userCount").textContent = users.length;
     }
     updateUserList();
 
@@ -217,42 +242,77 @@
     const scale = 25;
     const rows = canvas.height / scale;
     const cols = canvas.width / scale;
-    let snake = [{x:10*scale, y:10*scale}];
-    let food = {x:Math.floor(Math.random()*cols)*scale, y:Math.floor(Math.random()*rows)*scale};
-    let dx = scale, dy = 0;
-    let score = 0, baseSpeed = 3, maxSpeed = 18, speed = baseSpeed;
+    let snake = [{ x: 10 * scale, y: 10 * scale }];
+    let food = randomFood();
+    let dx = scale,
+      dy = 0;
+    let score = 0,
+      baseSpeed = 3,
+      maxSpeed = 18,
+      speed = baseSpeed;
     let lastTime = 0;
 
     // === SCORE & VISITORS ===
-    if(!localStorage.getItem('visitorCount')) localStorage.setItem('visitorCount', 0);
-    let visitorCount = parseInt(localStorage.getItem('visitorCount')) + 1;
-    localStorage.setItem('visitorCount', visitorCount);
-    document.getElementById('visitorCount').innerText = visitorCount;
+    if (!localStorage.getItem("visitorCount")) localStorage.setItem("visitorCount", 0);
+    let visitorCount = parseInt(localStorage.getItem("visitorCount")) + 1;
+    localStorage.setItem("visitorCount", visitorCount);
+    document.getElementById("visitorCount").innerText = visitorCount;
 
-    if(!localStorage.getItem('topScore')) localStorage.setItem('topScore', 0);
-    let topScore = parseInt(localStorage.getItem('topScore'));
-    document.getElementById('topScore').innerText = topScore;
+    if (!localStorage.getItem("topScore")) localStorage.setItem("topScore", 0);
+    let topScore = parseInt(localStorage.getItem("topScore"));
+    document.getElementById("topScore").innerText = topScore;
 
     // === CONTROLS ===
-    window.addEventListener('keydown', e => {
-      if(e.key === 'ArrowUp' && dy === 0){ dx=0; dy=-scale; }
-      else if(e.key === 'ArrowDown' && dy === 0){ dx=0; dy=scale; }
-      else if(e.key === 'ArrowLeft' && dx === 0){ dx=-scale; dy=0; }
-      else if(e.key === 'ArrowRight' && dx === 0){ dx=scale; dy=0; }
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp" && dy === 0) {
+        dx = 0;
+        dy = -scale;
+      } else if (e.key === "ArrowDown" && dy === 0) {
+        dx = 0;
+        dy = scale;
+      } else if (e.key === "ArrowLeft" && dx === 0) {
+        dx = -scale;
+        dy = 0;
+      } else if (e.key === "ArrowRight" && dx === 0) {
+        dx = scale;
+        dy = 0;
+      }
     });
-    document.getElementById('up').onclick = () => { if(dy===0){dx=0;dy=-scale;} };
-    document.getElementById('down').onclick = () => { if(dy===0){dx=0;dy=scale;} };
-    document.getElementById('left').onclick = () => { if(dx===0){dx=-scale;dy=0;} };
-    document.getElementById('right').onclick = () => { if(dx===0){dx=scale;dy=0;} };
+
+    document.getElementById("up").onclick = () => {
+      if (dy === 0) {
+        dx = 0;
+        dy = -scale;
+      }
+    };
+    document.getElementById("down").onclick = () => {
+      if (dy === 0) {
+        dx = 0;
+        dy = scale;
+      }
+    };
+    document.getElementById("left").onclick = () => {
+      if (dx === 0) {
+        dx = -scale;
+        dy = 0;
+      }
+    };
+    document.getElementById("right").onclick = () => {
+      if (dx === 0) {
+        dx = scale;
+        dy = 0;
+      }
+    };
 
     // === GAME LOOP ===
-    function startGame(){
+    function startGame() {
       requestAnimationFrame(loop);
     }
-    function loop(timestamp){
-      if(!lastTime) lastTime = timestamp;
+
+    function loop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
       const interval = 1000 / speed;
-      if(timestamp - lastTime > interval){
+      if (timestamp - lastTime > interval) {
         lastTime = timestamp;
         update();
         draw();
@@ -260,63 +320,83 @@
       requestAnimationFrame(loop);
     }
 
-    function update(){
-      let growth = Math.min(score/40,1);
-      speed = baseSpeed + (maxSpeed - baseSpeed)*growth;
-      let head = {x:snake[0].x + dx, y:snake[0].y + dy};
-      if(head.x>=canvas.width) head.x=0;
-      else if(head.x<0) head.x=canvas.width-scale;
-      if(head.y>=canvas.height) head.y=0;
-      else if(head.y<0) head.y=canvas.height-scale;
+    function update() {
+      let growth = Math.min(score / 40, 1);
+      speed = baseSpeed + (maxSpeed - baseSpeed) * growth;
 
-      if(collision(head, snake)){
-        alert("💀 Game Over! Score: "+score);
-        if(score>topScore){
-          topScore=score;
-          localStorage.setItem('topScore', topScore);
-          document.getElementById('topScore').innerText = topScore;
+      let head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      if (head.x >= canvas.width) head.x = 0;
+      else if (head.x < 0) head.x = canvas.width - scale;
+      if (head.y >= canvas.height) head.y = 0;
+      else if (head.y < 0) head.y = canvas.height - scale;
+
+      if (collision(head, snake)) {
+        alert("💀 Game Over! Score: " + score);
+        if (score > topScore) {
+          topScore = score;
+          localStorage.setItem("topScore", topScore);
+          document.getElementById("topScore").innerText = topScore;
         }
-        snake=[{x:10*scale,y:10*scale}];
-        dx=scale; dy=0; score=0; speed=baseSpeed;
-        document.getElementById('score').innerText=score;
+        snake = [{ x: 10 * scale, y: 10 * scale }];
+        dx = scale;
+        dy = 0;
+        score = 0;
+        speed = baseSpeed;
+        document.getElementById("score").innerText = score;
         return;
       }
 
       snake.unshift(head);
-      if(head.x===food.x && head.y===food.y){
+      if (head.x === food.x && head.y === food.y) {
         score++;
-        document.getElementById('score').innerText=score;
-        food={x:Math.floor(Math.random()*cols)*scale, y:Math.floor(Math.random()*rows)*scale};
+        document.getElementById("score").innerText = score;
+        food = randomFood();
       } else snake.pop();
     }
 
-    function draw(){
-      ctx.fillStyle='#000';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
+    function draw() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      snake.forEach(p=>{
-        const grad=ctx.createLinearGradient(p.x,p.y,p.x+scale,p.y+scale);
-        grad.addColorStop(0,'#0f0');
-        grad.addColorStop(1,'#070');
-        ctx.fillStyle=grad;
+      snake.forEach((p, i) => {
+        const grad = ctx.createRadialGradient(p.x + scale / 2, p.y + scale / 2, 2, p.x + scale / 2, p.y + scale / 2, scale / 2);
+        grad.addColorStop(0, i === 0 ? "#00ff00" : "#66ff66");
+        grad.addColorStop(1, "#003300");
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.roundRect(p.x,p.y,scale,scale,6);
+        ctx.roundRect(p.x, p.y, scale, scale, 8);
         ctx.fill();
       });
 
-      const cx=food.x+scale/2, cy=food.y+scale/2, r=scale/2.2;
-      const appleGrad=ctx.createRadialGradient(cx-3,cy-3,2,cx,cy,r);
-      appleGrad.addColorStop(0,'#ff6666');
-      appleGrad.addColorStop(1,'#b30000');
-      ctx.fillStyle=appleGrad;
+      // Apple 🍎
+      const cx = food.x + scale / 2,
+        cy = food.y + scale / 2,
+        r = scale / 2.2;
+      const appleGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, r);
+      appleGrad.addColorStop(0, "#ff6666");
+      appleGrad.addColorStop(1, "#b30000");
+      ctx.fillStyle = appleGrad;
       ctx.beginPath();
-      ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Apple leaf
+      ctx.fillStyle = "lime";
+      ctx.beginPath();
+      ctx.ellipse(cx - 4, cy - r - 3, 4, 6, Math.PI / 6, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    function collision(h, arr){
-      for(let i=1;i<arr.length;i++){
-        if(h.x===arr[i].x && h.y===arr[i].y) return true;
+    function randomFood() {
+      return {
+        x: Math.floor(Math.random() * cols) * scale,
+        y: Math.floor(Math.random() * rows) * scale,
+      };
+    }
+
+    function collision(h, arr) {
+      for (let i = 1; i < arr.length; i++) {
+        if (h.x === arr[i].x && h.y === arr[i].y) return true;
       }
       return false;
     }
